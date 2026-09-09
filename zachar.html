@@ -164,14 +164,15 @@ button.ghost{background:transparent;border:1px solid var(--pine);color:var(--pin
 button.ghost:hover{background:#E3E9DF}
 .note{color:var(--stone);font-size:15px;margin-top:20px;max-width:56ch}
 
-.shot{position:fixed;left:-10000px;top:0;width:540px;min-height:1170px;background:#1F4235;color:#F2F6EF;padding:140px 46px 56px;font-family:'Assistant',system-ui,sans-serif;display:flex;flex-direction:column}
-.shot .k1{font-size:13px;letter-spacing:.14em;color:#D9A445;font-weight:700;margin-bottom:20px}
-.shot .id{font-family:'Frank Ruhl Libre',serif;font-size:36px;font-weight:700;line-height:1.26;letter-spacing:-.02em;margin-bottom:14px}
-.shot .hb{font-size:20px;line-height:1.45;color:#9FC0B2;padding-bottom:26px;border-bottom:2px solid rgba(217,164,69,.5);margin-bottom:28px}
-.shot .row{margin-bottom:20px}
-.shot .rk{font-size:12px;font-weight:700;color:#D9A445;letter-spacing:.05em;margin-bottom:4px}
-.shot .rv{font-size:17px;line-height:1.5;color:#EAF0E7;white-space:pre-wrap}
-.shot .foot{margin-top:auto;padding-top:24px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:#8FA79A;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.shot{position:fixed;left:-10000px;top:0;width:540px;height:960px;overflow:hidden;background:#1F4235;color:#F2F6EF;padding:3.6em 2.7em 2.4em;font-family:'Assistant',system-ui,sans-serif;font-size:16px;display:flex;flex-direction:column}
+.shot>*{flex-shrink:0}
+.shot .k1{font-size:.8em;letter-spacing:.14em;color:#D9A445;font-weight:700;margin-bottom:1.1em}
+.shot .id{font-family:'Frank Ruhl Libre',serif;font-size:2.15em;font-weight:700;line-height:1.24;letter-spacing:-.02em;margin-bottom:.42em}
+.shot .hb{font-size:1.2em;line-height:1.45;color:#9FC0B2;padding-bottom:1.15em;border-bottom:2px solid rgba(217,164,69,.5);margin-bottom:1.3em}
+.shot .row{margin-bottom:1em}
+.shot .rk{font-size:.72em;font-weight:700;color:#D9A445;letter-spacing:.05em;margin-bottom:.3em}
+.shot .rv{font-size:1.05em;line-height:1.45;color:#EAF0E7;white-space:pre-wrap}
+.shot .foot{margin-top:auto;padding-top:1.2em;border-top:1px solid rgba(255,255,255,.16);font-size:.8em;color:#8FA79A;display:flex;justify-content:space-between;gap:.8em;flex-wrap:wrap}
 
 .imgout{display:none;margin-top:24px;background:var(--paper);border:1px solid var(--hair);border-radius:12px;padding:20px 22px}
 .imgout.on{display:block}
@@ -531,7 +532,7 @@ async function saveImage(){
 
   const shot = buildShot();
   document.body.appendChild(shot);
-  if(shot.scrollHeight > 1170) shot.style.paddingTop = '80px';
+  fitShot(shot);
 
   try{
     const canvas = await html2canvas(shot, {
@@ -561,6 +562,14 @@ async function saveImage(){
   }finally{
     shot.remove();
     btn.disabled = false;
+  }
+}
+
+function fitShot(el){
+  let size = 16;
+  while(el.scrollHeight > el.clientHeight && size > 9){
+    size -= 0.25;
+    el.style.fontSize = size + 'px';
   }
 }
 
