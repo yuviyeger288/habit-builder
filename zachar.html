@@ -164,7 +164,15 @@ button.ghost{background:transparent;border:1px solid var(--pine);color:var(--pin
 button.ghost:hover{background:#E3E9DF}
 .note{color:var(--stone);font-size:15px;margin-top:20px;max-width:56ch}
 
-@media print{body{background:#fff}.masthead,.tally,.tools,.note,button.edit,.planback{display:none}.plan{border:none;padding:0}.cell{break-inside:avoid}}
+.imgout{display:none;margin-top:24px;background:var(--paper);border:1px solid var(--hair);border-radius:12px;padding:20px 22px}
+.imgout.on{display:block}
+.imgout h4{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:12px}
+.imgout img{display:block;width:100%;height:auto;border:1px solid var(--hair);border-radius:8px;margin-bottom:16px}
+.imgout .dl{display:inline-block;background:var(--pine);color:#fff;text-decoration:none;border-radius:10px;padding:12px 24px;font-weight:600;font-size:16px}
+.imgout .dl:hover{background:#1F4235}
+.imgout .tip{color:var(--stone);font-size:15px;margin-top:14px;line-height:1.55}
+
+@media print{body{background:#fff}.masthead,.tally,.tools,.note,.imgout,button.edit,.planback{display:none}.plan{border:none;padding:0}.cell{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -200,12 +208,12 @@ button.ghost:hover{background:#E3E9DF}
       <div class="stamp" id="planStamp"></div>
     </div>
     <div class="tools">
-      <button class="go" onclick="copyPlan()" id="copyBtn">העתקת התוכנית</button>
-      <button class="ghost" onclick="saveImage()" id="imgBtn">שמירה כתמונה</button>
+      <button class="go" onclick="saveImage()" id="imgBtn">שמירה כתמונה</button>
       <button class="ghost" onclick="window.print()">הדפסה</button>
       <button class="ghost planback" onclick="show(1)">חזרה לשאלות</button>
       <button class="ghost" onclick="restart()">בניית הרגל נוסף</button>
     </div>
+    <div class="imgout" id="imgOut"></div>
     <p class="note">תלו את זה במקום שרואים כל יום. תוכנית במגירה היא רעיון; תוכנית מול העיניים היא גירוי.</p>
   </section>
 
@@ -499,45 +507,17 @@ function esc(t){
   return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function planText(){
-  let out = 'תוכנית הפעולה שלי\n\n';
-  if(data.identity) out += '1. ' + data.identity + '\n';
-  if(data.habit) out += '2. ' + data.habit + '\n';
-  out += '\n';
-  CELLS.forEach(function(c){
-    const v = fmt(c[0], data[c[0]]);
-    if(v) out += c[1] + ': ' + v + '\n';
-  });
-  const st = fmt('start', data.start), rv = fmt('review', data.review);
-  if(st) out += '\n10. מתחיל בתאריך: ' + st + '\n';
-  if(rv) out += '10. עוצר לבדוק בתאריך: ' + rv + '\n';
-  return out;
-}
-
-function copyPlan(){
-  const btn = document.getElementById('copyBtn');
-  const done = function(){ btn.textContent='הועתק'; setTimeout(function(){btn.textContent='העתקת התוכנית';},1800); };
-  function fallback(){
-    const ta=document.createElement('textarea');
-    ta.value=planText(); ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.select();
-    try{document.execCommand('copy'); done();}catch(e){btn.textContent='ההעתקה נכשלה';}
-    document.body.removeChild(ta);
-  }
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(planText()).then(done).catch(fallback);
-  } else fallback();
-}
+let imgUrl = null;
 
 async function saveImage(){
   const btn = document.getElementById('imgBtn');
   const card = document.querySelector('.plan');
+  const original = 'שמירה כתמונה';
   if(typeof html2canvas === 'undefined'){
     btn.textContent = 'נדרש חיבור לאינטרנט';
-    setTimeout(function(){ btn.textContent = 'שמירה כתמונה'; }, 2200);
+    setTimeout(function(){ btn.textContent = original; }, 2200);
     return;
   }
-  const original = btn.textContent;
   btn.textContent = 'מכין תמונה…';
   btn.disabled = true;
 
@@ -550,56 +530,64 @@ async function saveImage(){
       backgroundColor:'#FAFBF8',
       scale: Math.min(window.devicePixelRatio || 1, 2) * 1.6,
       useCORS:true,
-      logging:false,
-      allowTaint:true
+      logging:false
     });
     const blob = await new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
     if(!blob) throw new Error('no blob');
 
-    const file = new File([blob], 'תוכנית-ההרגל.png', {type:'image/png'});
+    if(imgUrl) URL.revokeObjectURL(imgUrl);
+    imgUrl = URL.createObjectURL(blob);
+    showImage(imgUrl);
 
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      try{
-        await navigator.share({files:[file], title:'תוכנית ההרגל שלי'});
-        btn.textContent = original;
-      }catch(e){
-        if(e.name !== 'AbortError') downloadImage(blob, original, btn);
-        else btn.textContent = original;
-      }
-    } else {
-      downloadImage(blob, original, btn);
-    }
+    try{
+      const a = document.createElement('a');
+      a.href = imgUrl; a.download = 'תוכנית-ההרגל.png'; a.style.display = 'none';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }catch(e){}
+
+    btn.textContent = 'התמונה מוכנה ↓';
+    setTimeout(function(){ btn.textContent = original; }, 2600);
   }catch(e){
-    if(e && e.name === 'AbortError'){ btn.textContent = original; }
-    else { btn.textContent = 'השמירה נכשלה'; setTimeout(function(){ btn.textContent = original; }, 2200); }
+    btn.textContent = 'השמירה נכשלה';
+    setTimeout(function(){ btn.textContent = original; }, 2200);
   }finally{
     card.classList.remove('capturing');
     btn.disabled = false;
   }
 }
 
-function downloadImage(blob, original, btn){
-  try{
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'תוכנית-ההרגל.png';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
-    btn.textContent = 'נשמר ✓';
-    setTimeout(function(){ btn.textContent = original; }, 2000);
-  }catch(e){
-    btn.textContent = 'בדוק את ההרשאות';
-    setTimeout(function(){ btn.textContent = original; }, 2200);
-  }
+function showImage(url){
+  const box = document.getElementById('imgOut');
+  box.innerHTML = '';
+
+  const h = document.createElement('h4');
+  h.textContent = 'התמונה מוכנה';
+
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = 'תוכנית הפעולה שלי';
+
+  const a = document.createElement('a');
+  a.className = 'dl';
+  a.href = url;
+  a.download = 'תוכנית-ההרגל.png';
+  a.textContent = 'הורדת התמונה';
+
+  const tip = document.createElement('p');
+  tip.className = 'tip';
+  tip.textContent = 'אם ההורדה לא התחילה לבד — לחיצה ארוכה על התמונה (בנייד) או קליק ימני (במחשב), ואז "שמירת תמונה בשם".';
+
+  box.appendChild(h); box.appendChild(img); box.appendChild(a); box.appendChild(tip);
+  box.classList.add('on');
+  box.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function restart(){
   document.querySelectorAll('[data-k]').forEach(function(el){ el.value=''; });
   Object.keys(data).forEach(function(k){ delete data[k]; });
+  const box = document.getElementById('imgOut');
+  box.classList.remove('on'); box.innerHTML = '';
+  if(imgUrl){ URL.revokeObjectURL(imgUrl); imgUrl = null; }
   show(1);
 }
 
