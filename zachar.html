@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>בניית הרגל — תוכנית פעולה</title>
+<meta name="description" content="עשר שאלות שבונות תוכנית פעולה להרגל אחד. שינוי גדול לא קורה ביום אחד — הוא קורה בפעולות קטנות שחוזרות כל יום.">
+<meta name="theme-color" content="#2A5648">
+<meta property="og:type" content="website">
+<meta property="og:title" content="בניית הרגל — תוכנית פעולה">
+<meta property="og:description" content="שינוי גדול לא קורה ביום אחד — הוא קורה בפעולות קטנות שחוזרות כל יום.">
+<meta property="og:locale" content="he_IL">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=&apos;http://www.w3.org/2000/svg&apos; viewBox=&apos;0 0 32 32&apos;%3E%3Crect width=&apos;32&apos; height=&apos;32&apos; rx=&apos;7&apos; fill=&apos;%232A5648&apos;/%3E%3Crect x=&apos;8&apos; y=&apos;9&apos; width=&apos;3&apos; height=&apos;14&apos; rx=&apos;1.5&apos; fill=&apos;%23EDF0EA&apos;/%3E%3Crect x=&apos;14.5&apos; y=&apos;9&apos; width=&apos;3&apos; height=&apos;14&apos; rx=&apos;1.5&apos; fill=&apos;%23EDF0EA&apos;/%3E%3Crect x=&apos;21&apos; y=&apos;9&apos; width=&apos;3&apos; height=&apos;14&apos; rx=&apos;1.5&apos; fill=&apos;%23C97E1C&apos;/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --ground:#EDF0EA; --paper:#FAFBF8; --ink:#16211D;
+  --pine:#2A5648; --pine-soft:#5C8375; --amber:#C97E1C;
+  --stone:#7D877F; --hair:#D3D9CF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--ground);color:var(--ink);font-family:'Assistant',system-ui,sans-serif;font-size:17px;line-height:1.6;min-height:100vh}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 22px 80px}
+@media(max-width:520px){
+  body{font-size:16px}
+  .wrap{padding:20px 16px 70px}
+  button.go{width:100%;padding:15px 20px}
+  .nav{flex-wrap:wrap}
+  button.back{padding:12px 4px}
+  .tools{flex-direction:column;align-items:stretch}
+  .tools button{width:100%}
+  input[type=text],input[type=date],textarea{font-size:16px}
+}
+
+.masthead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--hair);margin-bottom:34px}
+.brand{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:20px;letter-spacing:-.01em}
+.brand span{color:var(--pine-soft);font-family:'Assistant';font-weight:400;font-size:15px;margin-inline-start:10px}
+.mhright{display:flex;align-items:baseline;gap:16px;white-space:nowrap}
+.counter{font-size:14px;color:var(--stone);white-space:nowrap}
+.genderlink{font-size:14px;color:var(--pine-soft);text-decoration:none;border-bottom:1px solid var(--hair)}
+.genderlink:hover{color:var(--pine);border-color:var(--pine-soft)}
+@media(max-width:520px){.genderlink{font-size:13px}}
+
+.tally{display:flex;gap:5px;margin-bottom:30px;align-items:flex-end;height:20px}
+.tick{width:3px;height:11px;background:var(--hair);border-radius:2px;transition:height .25s,background .25s}
+.tick.done{background:var(--pine);height:20px}
+.tick.now{background:var(--amber);height:20px}
+
+.screen{display:none;animation:in .3s ease}
+.screen.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.screen{animation:none}.tick{transition:none}}
+
+.qgrid{
+  display:grid;grid-template-columns:1.25fr .85fr;
+  grid-template-areas:"head ex" "body ex";
+  gap:0 44px;align-items:start;
+}
+.qhead{grid-area:head}
+.qbody{grid-area:body}
+.example{grid-area:ex}
+@media(max-width:820px){
+  .qgrid{grid-template-columns:1fr;grid-template-areas:"head" "ex" "body";gap:0}
+  .example{margin-bottom:26px}
+}
+
+.step{font-size:14px;color:var(--pine-soft);margin-bottom:8px}
+h2{font-family:'Frank Ruhl Libre',serif;font-weight:700;font-size:clamp(26px,4.2vw,36px);line-height:1.22;letter-spacing:-.015em;margin-bottom:12px}
+.hint{color:var(--stone);max-width:52ch;margin-bottom:16px}
+
+/* explanation disclosure */
+.explain-btn{
+  background:none;border:none;padding:0;margin-bottom:20px;
+  font-family:inherit;font-size:16px;color:var(--pine);cursor:pointer;
+  border-bottom:1px solid var(--pine-soft);
+}
+.explain-btn:hover{color:var(--amber);border-color:var(--amber)}
+.explain-btn:focus-visible{outline:2px solid var(--pine);outline-offset:3px}
+.explain{
+  display:none;background:#E5EAE1;border-radius:12px;padding:20px 24px;margin-bottom:24px;max-width:60ch;
+}
+.explain.open{display:block}
+.explain h4{font-size:15px;color:var(--pine);margin-bottom:8px;font-weight:700}
+.explain p{font-size:16px;line-height:1.68;color:#2E3A35}
+.explain p+h4{margin-top:16px}
+
+label.small{display:block;font-size:14px;color:var(--pine);margin-bottom:6px;font-weight:600}
+input[type=text],input[type=date],textarea{
+  width:100%;background:var(--paper);border:1px solid var(--hair);border-radius:10px;
+  padding:13px 15px;font-family:inherit;font-size:17px;color:var(--ink);
+  transition:border-color .15s, box-shadow .15s;
+}
+textarea{min-height:96px;resize:vertical;line-height:1.55}
+input:focus,textarea:focus{outline:none;border-color:var(--pine);box-shadow:0 0 0 3px rgba(42,86,72,.13)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.pair{grid-template-columns:1fr}}
+.field{margin-bottom:18px}
+
+.example{background:var(--paper);border:1px solid var(--hair);border-radius:12px;padding:20px 22px;position:sticky;top:24px}
+.example h3{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:14px}
+.exline{font-size:16px;line-height:1.6}
+.exline+.exline{margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
+.exline b{display:block;font-size:13px;color:var(--stone);font-weight:600;margin-bottom:3px}
+.example .why{color:var(--stone);font-size:15px;line-height:1.6;margin-top:16px;padding-top:14px;border-top:1px solid var(--hair)}
+@media(max-width:820px){.example{position:static}}
+
+.nav{display:flex;gap:12px;align-items:center;margin-top:30px;padding-top:22px;border-top:1px solid var(--hair)}
+button.go{background:var(--pine);color:#fff;border:none;border-radius:10px;padding:13px 30px;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;transition:background .15s}
+button.go:hover{background:#1F4235}
+button.go:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+button.back{background:none;border:none;color:var(--stone);font-family:inherit;font-size:16px;cursor:pointer;padding:13px 6px}
+button.back:hover{color:var(--pine)}
+
+.intro-lead{font-family:'Frank Ruhl Libre',serif;font-size:clamp(28px,5.2vw,50px);font-weight:700;line-height:1.22;letter-spacing:-.02em;margin-bottom:14px;text-wrap:balance}
+.deck{font-family:'Frank Ruhl Libre',serif;font-size:clamp(19px,2.6vw,23px);font-weight:500;color:var(--pine);line-height:1.45;max-width:42ch;margin-bottom:30px}
+.intro p{max-width:54ch;color:#3C4A44;margin-bottom:16px}
+.intro p:last-of-type{margin-bottom:34px}
+
+.plan{background:var(--paper);border:1px solid var(--hair);border-radius:14px;padding:38px 40px}
+@media(max-width:620px){.plan{padding:28px 22px}}
+.plan .kicker{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:16px}
+.plan .idline{
+  font-family:'Frank Ruhl Libre',serif;font-size:clamp(25px,4vw,38px);
+  line-height:1.28;font-weight:700;letter-spacing:-.02em;margin-bottom:10px;
+}
+.plan .idline .empty{color:#B6BDB2;font-style:italic;font-weight:500}
+.plan .num{color:var(--pine-soft);font-family:'Assistant';font-weight:600;font-size:.62em;vertical-align:.18em;margin-inline-end:2px}
+.plan .habitline{
+  font-size:20px;color:var(--pine);line-height:1.45;
+  margin-bottom:30px;padding-bottom:26px;border-bottom:2px solid var(--pine);
+}
+.plan .habitline .empty{color:#B6BDB2;font-style:italic}
+
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px 40px}
+@media(max-width:640px){.pgrid{grid-template-columns:1fr;gap:20px}}
+.cell .k{font-size:13px;color:var(--pine-soft);font-weight:700;margin-bottom:4px;display:flex;align-items:baseline;gap:8px}
+.cell .v{font-size:17px;line-height:1.5;white-space:pre-wrap}
+.cell .v.empty{color:#B6BDB2;font-style:italic}
+
+.pfoot{
+  margin-top:32px;padding-top:18px;border-top:1px solid var(--hair);
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-size:15px;color:var(--stone);
+}
+.pfoot span{display:flex;align-items:baseline;gap:8px}
+
+button.edit{
+  background:none;border:none;padding:0;cursor:pointer;
+  font-family:inherit;font-size:12px;color:#A8B0A6;font-weight:400;line-height:1.4;
+  transition:color .15s;
+}
+button.edit:hover{color:var(--pine);text-decoration:underline}
+button.edit:focus-visible{outline:2px solid var(--pine);outline-offset:2px;color:var(--pine)}
+.capturing button.edit{display:none!important}
+.capturing{box-shadow:none}
+.stamp{display:none;margin-top:26px;padding-top:16px;border-top:1px solid var(--hair);font-size:14px;color:var(--stone)}
+.capturing .stamp{display:block}
+.tools{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+button.ghost{background:transparent;border:1px solid var(--pine);color:var(--pine);border-radius:10px;padding:12px 22px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer}
+button.ghost:hover{background:#E3E9DF}
+.note{color:var(--stone);font-size:15px;margin-top:20px;max-width:56ch}
+
+@media print{body{background:#fff}.masthead,.tally,.tools,.note,button.edit,.planback{display:none}.plan{border:none;padding:0}.cell{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="brand">בניית הרגל<span>תוכנית פעולה בעשרה צעדים</span></div>
+    <div class="mhright"><a class="genderlink" href="index.html">גרסה בלשון נקבה</a><span class="counter" id="counter"></span></div>
+  </div>
+
+  <div class="tally" id="tally"></div>
+
+  <section class="screen on" id="s0">
+    <div class="intro">
+      <h1 class="intro-lead">הרגל לא נשען על מוטיבציה.<br>הוא נשען על מערכת.</h1>
+      <p class="deck">שינוי גדול לא קורה ביום אחד — הוא קורה בפעולות קטנות שחוזרות כל יום.</p>
+      <p>כאן בונים את המערכת. עשר שאלות, אחת בכל פעם. לצד כל שאלה יש דוגמה ממולאת, וכפתור שפותח הסבר על מה השאלה בודקת ולמה היא קובעת אם ההרגל יחזיק.</p>
+      <p>אין תשובות נכונות ואין אפשרויות מוכנות — התוכנית עובדת רק אם היא נכתבה מהחיים שלך.</p>
+
+      <button class="go" onclick="show(1)">מתחילים</button>
+    </div>
+  </section>
+
+  <div id="questions"></div>
+
+  <section class="screen" id="plan">
+    <div class="plan">
+      <div class="kicker">תוכנית הפעולה שלי</div>
+      <div class="idline" id="planIdentity"></div>
+      <div class="habitline" id="planHabit"></div>
+      <div class="pgrid" id="planRows"></div>
+      <div class="pfoot" id="planFoot"></div>
+      <div class="stamp" id="planStamp"></div>
+    </div>
+    <div class="tools">
+      <button class="go" onclick="copyPlan()" id="copyBtn">העתקת התוכנית</button>
+      <button class="ghost" onclick="saveImage()" id="imgBtn">שמירה כתמונה</button>
+      <button class="ghost" onclick="window.print()">הדפסה</button>
+      <button class="ghost planback" onclick="show(1)">חזרה לשאלות</button>
+      <button class="ghost" onclick="restart()">בניית הרגל נוסף</button>
+    </div>
+    <p class="note">תלו את זה במקום שרואים כל יום. תוכנית במגירה היא רעיון; תוכנית מול העיניים היא גירוי.</p>
+  </section>
+
+</div>
+
+<script>
+const Q = [
+{
+  t:'מי אני רוצה להיות?',
+  hint:'לא מה אני רוצה להשיג — מי אני הופך להיות. זה המשפט שכל שאר התוכנית נגזרת ממנו.',
+  ex:[['התשובה','אני מישהי שעומדת במילה שלה — גם כשאף אחד לא רואה, וגם כשלא בא לי.']],
+  why:'שימו לב שאין פה יעד ואין מספר. זהות היא לא משהו שמשיגים בתאריך מסוים — היא משהו שמוכיחים שוב ושוב.',
+  explain:[
+    ['שלוש רמות של שינוי','אפשר לשנות בשלוש רמות: תוצאה (מה אני רוצה להשיג), תהליך (מה אני עושה), וזהות (במי אני הופך). רוב האנשים מתחילים מהתוצאה — ולכן זה נשבר.'],
+    ['למה זהות מחזיקה יותר','כשמתחילים מהתוצאה, כל פעולה היא משהו שצריך לשכנע את עצמך לעשות. אתה נלחם בעצמך כל יום מחדש. כשמתחילים מהזהות, הפעולה נובעת ממי שאתה — ואין מה לשכנע.'],
+    ['כל פעולה מחזקת את הזהות','אתה לא צריך קודם להיות האדם הזה ואז לפעול. זה עובד הפוך: כל פעם שאתה עושה את ההרגל, אתה מחזק את הזהות הזו עוד קצת. לא צריך שכל יום יהיה מושלם — רק שהחיזוקים יהיו יותר מהפעמים שלא.'],
+    ['איך לענות','כתוב משפט אחד שמתחיל ב"אני מישהו ש…". שאל את עצמך: אם היינו נפגשים בעוד שנה, איזה אדם הייתי רוצה להיות? התשובה צריכה להיות משהו שאתה מאמין בו, לא משהו שנשמע טוב.']
+  ],
+  fields:[{k:'identity',label:'אני מישהו ש…',ph:'אני מישהו ש…',area:true}]
+},
+{
+  t:'מה ההרגל שיוכיח את זה?',
+  hint:'פעולה אחת שאפשר לענות עליה בכן או לא בסוף היום.',
+  ex:[['התשובה','אני נכנסת למיטה ב-23:15 וקמה ב-6:30.']],
+  why:'אם אי אפשר לענות בכן או לא, ההרגל מנוסח רחב מדי. "לישון יותר טוב" זו כוונה; "במיטה ב-23:15" זה הרגל.',
+  explain:[
+    ['למה ספציפיות קובעת','המוח לא יודע לבצע כוונה. הוא יודע לבצע פעולה. "אני אתאמן יותר" נשמע כמו החלטה, אבל אין בו שום דבר שאפשר לעשות ב-שש בערב — ולכן זה נדחה ליום הבא, ואז ליום שאחריו.'],
+    ['הרגל אחד, לא שלושה','הפיתוי הוא לשנות ארבעה דברים בבת אחת כי יש התלהבות. זה בדיוק מה שמפיל אנשים. הרגל אחד שמחזיק שווה יותר מארבעה שנשברים תוך שבוע.'],
+    ['מבחן פשוט','אם בסוף היום אתה צריך לחשוב אם ביצעת או לא — ההרגל לא מוגדר מספיק. הוא צריך להיות ברור כמו "צחצחתי שיניים".'],
+    ['איך לענות','משפט אחד, פעולה אחת, עם מספר או שעה אם אפשר. לא "להיות יותר בכושר" אלא "עשר דקות חבל ביום".']
+  ],
+  fields:[{k:'habit',label:'ההרגל שלי',ph:'אני…',area:true}]
+},
+{
+  t:'מה ההרגל הזה מחליף?',
+  hint:'כל הרגל חדש תופס זמן ומקום של משהו קיים. עדיף לדעת מה מראש.',
+  ex:[['התשובה','זה בא במקום שעה וחצי בערב — בעיקר שיחות עם חברות ועריכת סרטונים מאוחר.'],['ההחלטה שנגזרת','העריכה עוברת לעד 22:00, ומה שלא הספקתי עובר למחר.']],
+  why:'ברגע שיודעים מה נדחק, אפשר להחליט מראש איפה הדברים האלה יקרו — במקום לגלות באמצע השבוע שמשהו נדרס.',
+  explain:[
+    ['היום שלך מלא כבר עכשיו','הרגל חדש לא נכנס לחלל ריק. אם אתה קם ב-6:30 במקום ב-8:00, הערב שלך התקצר בשעה וחצי. משהו חייב לזוז.'],
+    ['למה זה מפיל אנשים','רוב האנשים לא שואלים את השאלה הזו. ואז ההרגל החדש מתנגש במשהו קיים שחשוב להם — והם מרגישים שהם נכשלו, כשבעצם הם פשוט לא תכננו את ההתנגשות.'],
+    ['לא ויתור — העברה','המטרה היא לא למחוק את מה שנדחק. אם עריכת סרטונים חשובה לך, היא לא מתבטלת — היא עוברת לשעה אחרת. הרגל שמעניש אותך על משהו שאתה רוצה יישבר תוך שבוע.'],
+    ['איך לענות','כתוב מה נדחק, ואז מה קורה איתו במקום. אם אתה לא מוכן לשלם את המחיר — זה הזמן לגלות, לא בעוד שבועיים.']
+  ],
+  fields:[{k:'replaces',label:'זה בא במקום…',ph:'זה בא במקום…',area:true}]
+},
+{
+  t:'מה יפעיל אותי?',
+  hint:'הרגל נתלה על פעולה שכבר קיימת, או על יום ושעה קבועים. הכי חזק — שניהם.',
+  ex:[['צימוד להרגל קיים','אחרי שאני מצחצחת שיניים בערב, אני שמה את הטלפון על הארון ונכנסת למיטה.'],['יום ושעה','כל יום, כיבוי אור ב-23:15.']],
+  why:'הפעולה שבחרת כגירוי צריכה לקרות בכל מקרה. אחרת בנית הרגל שתלוי בהרגל שעוד לא קיים.',
+  explain:[
+    ['הגירוי הוא השלב הראשון בלולאה','כל הרגל עובד לפי אותו מנגנון: גירוי → חשק → תגובה → תגמול. הגירוי הוא מה שמפעיל את כל השרשרת. בלי גירוי ברור, פשוט לא תיזכר.'],
+    ['למה "מתישהו במהלך היום" נכשל','כי אז כל יום זו החלטה מחדש. וברגע שאתה עייף או עמוס, ההחלטה הזו תמיד מפסידה. מחקרים על כוונות מוגדרות מראה שאנשים שכתבו מתי ואיפה בדיוק הם יעשו משהו — ביצעו הרבה יותר מאלה שרק התכוונו.'],
+    ['צימוד הרגלים','יש לך כבר עשרות פעולות שאתה עושה כל יום בלי לחשוב: מתקלח, מצחצח שיניים, חוזר הביתה, מכבה את השעון. כל אחת מהן היא גירוי מוכן שכבר עובד. אתה תולה עליה משהו חדש במקום לבנות גירוי מאפס.'],
+    ['איך לענות','השלם: "אחרי ש[פעולה שאני עושה בכל מקרה], אני [ההרגל החדש]". ואם אפשר, הוסף גם שעה. שתי נקודות אחיזה עדיפות על אחת — אם השעה זזה, הצימוד עדיין תופס אותך.']
+  ],
+  fields:[
+    {k:'trigger',label:'אחרי ש… , אני…',ph:'אחרי ש… , אני…'},
+    {k:'when',label:'ביום ובשעה',ph:'כל יום, ב-…'}
+  ]
+},
+{
+  t:'מה הגרסה הקטנה?',
+  hint:'הפעולה הכי קטנה שאפשר, פחות משתי דקות. זו הגרסה לימים שקשה.',
+  ex:[['התשובה','רגליים על הרצפה וכוס מים. זהו.'],['מתי משתמשים בה','רק בבקרים שבהם מתחיל ויכוח בראש. ביום רגיל ממשיכים כרגיל.']],
+  why:'זה נשמע קטן מדי בכוונה. הקושי האמיתי הוא ההתחלה — ברגע שאתה כבר עומד, הוויכוח כבר לא מתחיל.',
+  explain:[
+    ['כלל שתי הדקות','כל הרגל צריך גרסה שלוקחת פחות משתי דקות. לא "לקרוא ספר" אלא "לפתוח עמוד אחד". לא "להתאמן שעה" אלא "לנעול נעליים". לא "לקום ולנצל את הבוקר" אלא "לשים רגליים על הרצפה".'],
+    ['למה זה עובד','כי אם הפעולה קשה מדי ביחס לחשק שיש לך באותו רגע — פשוט לא תעשה אותה. זה לא עצלנות, זו משוואה שלא מסתדרת. הקטנת הפעולה משנה את המשוואה.'],
+    ['ההתחלה היא הכל','כמעט אף פעם לא תקום, תעמוד, ואז תחזור למיטה. כמעט אף פעם לא תנעל נעליים ואז תוריד אותן. ברגע שההחלטה הקשה מאחוריך, ההמשך קורה כמעט לבד.'],
+    ['וגם ביום שעשית רק את זה — ניצחת','הגרסה הקטנה שומרת על הרצף. לא שברת כלום, והמשכת לחזק את הזהות שאתה בונה. זה נספר.'],
+    ['איך לענות','שאל את עצמך: מה הפעולה הכי קטנה שאם עשיתי אותה, סימנתי וי? אם התשובה עדיין נשמעת מאמצת — תקטין עוד.']
+  ],
+  fields:[
+    {k:'tiny',label:'הגרסה הקטנה שלי',ph:'גם ביום הכי גרוע, אני…',area:true},
+    {k:'tinyWhen',label:'מתי אני משתמש בה',ph:'בימים שבהם…'}
+  ]
+},
+{
+  t:'מה מקל ומה מקשה?',
+  hint:'לקצר את הדרך אל ההרגל שאתה רוצה, ולהאריך את הדרך אל מה שמושך אותך לכיוון השני.',
+  ex:[['מה מקל','הערב אני מוציאה את בגדי הריצה ומניחה אותם ליד המיטה.'],['מה מקשה','הטלפון גבוה על הארון — כדי לכבות את השעון אני חייבת לקום ולעמוד.']],
+  why:'ההרגל הרע בבוקר הוא לא "לישון". הוא לכבות את השעון ולחזור למיטה — פעולה של שתי שניות. זו הפעולה שצריך להקשות.',
+  explain:[
+    ['אנחנו הולכים למה שדורש פחות מאמץ','זה לא אופי חלש, זו ברירת מחדל של המוח. אז במקום להילחם בזה — משתמשים בזה.'],
+    ['הקלה: לקצר את המרחק','כל שלב שאתה מוריד מהדרך אל הפעולה מעלה את הסיכוי שתעשה אותה. בגדים מוכנים מהערב, כוס מים ליד המיטה, נעליים ליד הדלת. לא הוספת מוטיבציה — קיצרת את המרחק.'],
+    ['הקשיה: להוסיף שלב לפני מה שמפיל אותך','אותו עיקרון, רק הפוך. יש הרגל רע שמפיל לך את ההרגל הטוב — תוסיף לו שלב אחד. הטלפון רחוק מהמיטה, אז כדי לחזור לישון צריך קודם לקום ולעמוד. זה עדיין אפשרי, אבל כבר לא קורה בלי לשים לב.'],
+    ['מה בדיוק לבחור','תזהה את הפעולה המדויקת שמפילה אותך, לא את ההתנהגות הכללית. ההרגל הרע בבוקר הוא לא "לישון" — הוא לכבות את השעון ולחזור למיטה. פעולה של שתי שניות. את הפעולה הזו אתה מקשה.'],
+    ['הכי חשוב — זה נקבע פעם אחת','שתי ההחלטות האלה מתקבלות פעם אחת, כשאתה רגוע, ואז הן עובדות בשבילך כל יום. זה ההפך מכוח רצון, שצריך לייצר מחדש בכל פעם.'],
+    ['איך לענות','שתי פעולות פיזיות: אחת שמסדרת לך מראש את הדרך אל ההרגל הטוב, ואחת שמוסיפה שלב לפני ההרגל הרע. שתיהן נקבעות פעם אחת ואז עובדות לבד.']
+  ],
+  fields:[
+    {k:'easier',label:'איזו פעולה תקל עליי לבצע את ההרגל הטוב',ph:'מראש אני…'},
+    {k:'harder',label:'איזו פעולה תקשה עליי לבצע את ההרגל הרע',ph:'אני מוסיף שלב לפני…'}
+  ]
+},
+{
+  t:'מה התגמול המיידי?',
+  hint:'משהו קטן וטוב שאתה מקבל ברגע שסיימת — לא בעוד חודש.',
+  ex:[['התשובה','קפה שאני אוהבת, מוכן לי מיד כשאני קמה.'],['התנאי','רק אם קמתי בזמן. אם קמתי ב-8:00 — אין קפה מיוחד.']],
+  why:'התגמול חייב להיות תלוי בביצוע. אם הוא מגיע גם בלי ההרגל, הוא לא מתגמל כלום.',
+  explain:[
+    ['המוח שואל "מה אני מקבל עכשיו"','הוא לא שואל מה יקרה בעוד שנה. הוא מתוכנת לתגמול מיידי — וזו הסיבה שהוא בוחר בהרגל הרע. הוא לא טיפש, הוא פשוט עושה את החישוב שהוא יודע לעשות.'],
+    ['הרגלים טובים ורעים בנויים הפוך','הרגל רע נותן תגמול מיידי ומחיר שמצטבר בעתיד. הרגל טוב נותן מחיר מיידי ותגמול רחוק. זה כל הפער שאנחנו צריכים לגשר עליו.'],
+    ['התגמול הוא מה שמלמד את המוח לחזור','השלב הרביעי בלולאה. בלי משהו שמרגיש טוב ברגע הסיום, המוח לא רושם שכדאי לחזור על זה מחר — לא משנה כמה ההרגל נכון בתיאוריה.'],
+    ['איך לענות','משהו קטן, מיידי, ותלוי בביצוע. לא פרס גדול בסוף החודש — משהו של דקה, היום. ושים לב שהוא לא סותר את ההרגל עצמו.']
+  ],
+  fields:[{k:'reward',label:'אחרי שאעשה את זה, אני…',ph:'אחרי שאעשה את זה, אני…',area:true}]
+},
+{
+  t:'איך אני מודד?',
+  hint:'לא צריך אפליקציה. לוח שנה ו-X בכל יום שביצעת עושים את העבודה.',
+  ex:[['התשובה','X שחור על לוח השנה בחדר, כל בוקר מיד אחרי שקמתי.']],
+  why:'מלכודת אחת: הסימון הוא לא המטרה. יום בלי X הוא יום בלי X — לא הוכחה שנכשלת.',
+  explain:[
+    ['מה שנמדד מתקיים','הרגל שאתה עוקב אחריו הוא הרגל שאתה שם לב אליו. בלי מעקב, אחרי שבועיים כבר לא תדע אם ביצעת חמישה ימים או שניים — והתחושה תמיד תהיה גרועה יותר מהמציאות.'],
+    ['הכוח הוא בראייה של הרצף','אחרי חמישה ימים רצופים, לשבור את הרצף מרגיש כמו לוותר על משהו — לא רק כמו לדלג על יום. זה הופך את ההתמדה עצמה לתגמול.'],
+    ['וגם: הוכחה מול תחושה','ביום שתרגיש שאתה לא מתקדם, הלוח יראה לך מה באמת קרה. זה חשוב במיוחד למי שנוטה לראות רק את מה שחסר.'],
+    ['הסכנה','אל תיתן למדידה להפוך למטרה. אם יום אחד לא סימנת, זה לא אומר שנכשלת — ההרגל עצמו חשוב יותר מהסימון.'],
+    ['איך לענות','איפה בדיוק אתה מסמן, ומתי בדיוק. עדיף משהו פיזי שאתה רואה, ולא אפליקציה שצריך לפתוח.']
+  ],
+  fields:[{k:'track',label:'איפה אני מסמן, ומתי',ph:'אני מסמן…',area:true}]
+},
+{
+  t:'מה אני עושה אם פספסתי?',
+  hint:'נקבע עכשיו, כשאתה רגוע — לא ברגע שאתה עייף ומאוכזב.',
+  ex:[['התשובה','אם פספסתי, אז בפעם הבאה אני עושה את הגרסה הקטנה בכל מקרה.'],['ומה לא','לא מפצה, לא מכפילה, ולא מנסה "לתקן" את הפעם שהלכה.']],
+  why:'הכלל היחיד שחשוב: אף פעם לא פעמיים ברצף. לא הפספוס הראשון הורס — השרשרת שאחריו כן.',
+  explain:[
+    ['אתה תפספס. זה חלק מזה','כל מי שבנה הרגל פספס. השאלה היא לא איך לא לפספס — היא מה קורה בפעם הבאה.'],
+    ['אף פעם לא פעמיים','פספוס אחד הוא תקלה. פספוס פעמיים ברצף הוא ההתחלה של הרגל חדש, בכיוון ההפוך. אם תשמור רק על הכלל הזה, אתה כבר מסודר.'],
+    ['"פעמיים" זה לא תמיד יומיים','הכוונה היא לשתי הזדמנויות עוקבות, לא לשני ימים. בהרגל יומי זה שני ימים. בהרגל של פעמיים בשבוע, זה שני האימונים הבאים — כלומר שבוע שלם.'],
+    ['בהרגל לא יומי הפספוס יקר יותר','מי שמתאמן פעמיים בשבוע ומפספס פעם אחת איבד חצי מהשבוע. לכן דווקא בתדירות נמוכה שווה לקבוע מראש יום גיבוי — אם לא יצא ביום שלישי, אז רביעי.'],
+    ['לא לפצות ולא להעניש','הפיתוי הוא לעשות כפול בפעם הבאה כדי "להשלים". זה כמעט תמיד שובר לגמרי, כי זה הופך את הפעם הבאה לקשה יותר — בדיוק כשאתה הכי שברירי. פיצוי הוא עונש בתחפושת.'],
+    ['לבדוק מה קרה לפני','נפילה היא בדרך כלל לא רגע, היא שרשרת. הבוקר שלא קמת בו נקבע לרוב בלילה שלפני. אז השאלה היא לא "למה לא עשיתי" אלא "מה קרה לפני".'],
+    ['איך לענות','משפט אחד שנקבע עכשיו: "אם פספסתי, אז בפעם הבאה אני ___ בכל מקרה". ברגע שההחלטה קיימת, אתה לא צריך להחליט שוב ברגע הקשה.']
+  ],
+  fields:[{k:'recover',label:'אם פספסתי, אז בפעם הבאה…',ph:'אם פספסתי, אז בפעם הבאה אני…',area:true}]
+},
+{
+  t:'מתי אני מתחיל, ומתי עוצר לבדוק?',
+  hint:'תאריך התחלה, ותאריך אחד שבו אתה עוצר ושואל אם זה עובד.',
+  ex:[['מתחילה','מחר בבוקר — לא "בשבוע הבא".'],['בודקת את עצמי','בעוד שלושה שבועות. עד אז רק מבצעת.']],
+  why:'בלי תאריך התחלה זו רשימת משאלות. בלי תאריך בדיקה אתה או ממשיך עם משהו שבור, או שופט את עצמך כל יום מחדש.',
+  explain:[
+    ['אין "רגע נכון"','תמיד יש שבוע עמוס או תקופה לא מתאימה. זו בדיוק הסיבה שהתחלנו קטן — הגרסה הקטנה עובדת גם בשבוע גרוע.'],
+    ['למה צריך תאריך בדיקה','בלעדיו קורה אחד משניים: או שאתה ממשיך חודשיים עם משהו שלא עובד ולא עוצר לתקן, או שאתה בודק את עצמך כל יום ומתוסכל מכל תנודה קטנה.'],
+    ['מה עושים ביום הבדיקה','שואלים שלוש שאלות: זה קורה בפועל? מה שבר את זה בימים שלא? כדאי להגדיל את הפעולה או להשאיר כמו שהיא. ואז מחליטים — ולא לפני.'],
+    ['איך לענות','תאריך התחלה קרוב ככל האפשר, ותאריך בדיקה בעוד שבועיים עד חודש. עד אז — רק מבצעים.']
+  ],
+  fields:[
+    {k:'start',label:'מתחיל בתאריך',type:'date'},
+    {k:'review',label:'עוצר לבדוק בתאריך',type:'date'}
+  ]
+}
+];
+
+const data = {};
+const host = document.getElementById('questions');
+
+Q.forEach((q,i)=>{
+  const n = i+1;
+  const sec = document.createElement('section');
+  sec.className = 'screen';
+  sec.id = 's'+n;
+
+  const fields = q.fields.map(f=>{
+    if(f.type==='date')
+      return '<div class="field"><label class="small" for="'+f.k+'">'+f.label+'</label><input type="date" id="'+f.k+'" data-k="'+f.k+'"></div>';
+    if(f.area)
+      return '<div class="field"><label class="small" for="'+f.k+'">'+f.label+'</label><textarea id="'+f.k+'" data-k="'+f.k+'" placeholder="'+(f.ph||'')+'"></textarea></div>';
+    return '<div class="field"><label class="small" for="'+f.k+'">'+f.label+'</label><input type="text" id="'+f.k+'" data-k="'+f.k+'" placeholder="'+(f.ph||'')+'"></div>';
+  }).join('');
+
+  const dateWrap = q.fields.some(f=>f.type==='date') ? 'pair' : '';
+  const explainHtml = q.explain.map(function(p){ return '<h4>'+p[0]+'</h4><p>'+p[1]+'</p>'; }).join('');
+  const exHtml = q.ex.map(function(e){ return '<div class="exline"><b>'+e[0]+'</b>'+e[1]+'</div>'; }).join('');
+
+  sec.innerHTML =
+    '<div class="qgrid">'+
+      '<div class="qhead">'+
+        '<div class="step">שאלה '+n+' מתוך '+Q.length+'</div>'+
+        '<h2>'+q.t+'</h2>'+
+        '<p class="hint">'+q.hint+'</p>'+
+        '<button class="explain-btn" type="button" aria-expanded="false" aria-controls="ex'+n+'" onclick="toggleExplain(this,'+n+')">למה השאלה הזו חשובה?</button>'+
+        '<div class="explain" id="ex'+n+'">'+explainHtml+'</div>'+
+      '</div>'+
+      '<aside class="example">'+
+        '<h3>ככה זה נראה ממולא</h3>'+
+        exHtml+
+        '<p class="why">'+q.why+'</p>'+
+      '</aside>'+
+      '<div class="qbody">'+
+        '<div class="'+dateWrap+'">'+fields+'</div>'+
+        '<div class="nav">'+
+          '<button class="go" onclick="show('+(n+1)+')">'+(n===Q.length?'לתוכנית שלי':'הבא')+'</button>'+
+          '<button class="back" onclick="show('+(n-1)+')">חזרה</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  host.appendChild(sec);
+});
+
+function toggleExplain(btn,n){
+  const box = document.getElementById('ex'+n);
+  const open = box.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? 'סגירת ההסבר' : 'למה השאלה הזו חשובה?';
+}
+
+const tally = document.getElementById('tally');
+Q.forEach(function(){ const d=document.createElement('div'); d.className='tick'; tally.appendChild(d); });
+
+let cur = 0;
+function collect(){
+  document.querySelectorAll('[data-k]').forEach(function(el){ data[el.dataset.k] = el.value.trim(); });
+}
+function show(n){
+  collect();
+  if(n < 0) n = 0;
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+  if(n > Q.length){ buildPlan(); document.getElementById('plan').classList.add('on'); cur = Q.length+1; }
+  else { document.getElementById('s'+n).classList.add('on'); cur = n; }
+  paint();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function paint(){
+  const ticks = tally.children;
+  for(let i=0;i<ticks.length;i++){
+    ticks[i].className = 'tick' + (i < cur-1 ? ' done' : (i === cur-1 ? ' now' : ''));
+  }
+  const c = document.getElementById('counter');
+  if(cur===0) c.textContent = '';
+  else if(cur>Q.length) c.textContent = 'התוכנית מוכנה';
+  else c.textContent = cur + ' / ' + Q.length;
+  tally.style.visibility = cur===0 ? 'hidden' : 'visible';
+}
+
+const CELLS = [
+  ['trigger','4. מה יפעיל אותי',4],
+  ['when','4. ביום ובשעה',4],
+  ['replaces','3. מה זה מחליף',3],
+  ['tiny','5. הגרסה הקטנה',5],
+  ['tinyWhen','5. מתי אני משתמש בה',5],
+  ['reward','7. התגמול המיידי',7],
+  ['easier','6. מה מקל',6],
+  ['harder','6. מה מקשה',6],
+  ['track','8. איך אני מודד',8],
+  ['recover','9. אם פספסתי, אז בפעם הבאה',9]
+];
+
+function fmt(k,v){
+  if(!v) return '';
+  if(k==='start'||k==='review'){
+    const d = new Date(v);
+    if(isNaN(d.getTime())) return v;
+    return d.toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
+  }
+  return v;
+}
+
+function buildPlan(){
+  const emptyTag = function(t){ return '<span class="empty">'+t+'</span>'; };
+
+  const id = data.identity || '';
+  document.getElementById('planIdentity').innerHTML =
+    '<span class="num">1.</span> ' + (id ? esc(id) : emptyTag('לא מילאת את שאלת הזהות')) +
+    ' <button class="edit" onclick="show(1)">עריכה</button>';
+
+  const hb = data.habit || '';
+  document.getElementById('planHabit').innerHTML =
+    '<span class="num">2.</span> ' + (hb ? esc(hb) : emptyTag('לא מילאת את ההרגל')) +
+    ' <button class="edit" onclick="show(2)">עריכה</button>';
+
+  document.getElementById('planRows').innerHTML = CELLS.map(function(c){
+    const v = fmt(c[0], data[c[0]]);
+    return '<div class="cell">'+
+      '<div class="k">'+c[1]+'<button class="edit" onclick="show('+c[2]+')">עריכה</button></div>'+
+      '<div class="v '+(v?'':'empty')+'">'+(v ? esc(v) : 'לא מולא')+'</div>'+
+    '</div>';
+  }).join('');
+
+  const st = fmt('start', data.start), rv = fmt('review', data.review);
+  document.getElementById('planFoot').innerHTML =
+    '<span>10. מתחיל בתאריך: '+(st||'—')+'<button class="edit" onclick="show(10)">עריכה</button></span>'+
+    '<span>10. עוצר לבדוק בתאריך: '+(rv||'—')+'</span>';
+}
+
+function esc(t){
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function planText(){
+  let out = 'תוכנית הפעולה שלי\n\n';
+  if(data.identity) out += '1. ' + data.identity + '\n';
+  if(data.habit) out += '2. ' + data.habit + '\n';
+  out += '\n';
+  CELLS.forEach(function(c){
+    const v = fmt(c[0], data[c[0]]);
+    if(v) out += c[1] + ': ' + v + '\n';
+  });
+  const st = fmt('start', data.start), rv = fmt('review', data.review);
+  if(st) out += '\n10. מתחיל בתאריך: ' + st + '\n';
+  if(rv) out += '10. עוצר לבדוק בתאריך: ' + rv + '\n';
+  return out;
+}
+
+function copyPlan(){
+  const btn = document.getElementById('copyBtn');
+  const done = function(){ btn.textContent='הועתק'; setTimeout(function(){btn.textContent='העתקת התוכנית';},1800); };
+  function fallback(){
+    const ta=document.createElement('textarea');
+    ta.value=planText(); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy'); done();}catch(e){btn.textContent='ההעתקה נכשלה';}
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(planText()).then(done).catch(fallback);
+  } else fallback();
+}
+
+async function saveImage(){
+  const btn = document.getElementById('imgBtn');
+  const card = document.querySelector('.plan');
+  if(typeof html2canvas === 'undefined'){
+    btn.textContent = 'נדרש חיבור לאינטרנט';
+    setTimeout(function(){ btn.textContent = 'שמירה כתמונה'; }, 2200);
+    return;
+  }
+  const original = btn.textContent;
+  btn.textContent = 'מכין תמונה…';
+  btn.disabled = true;
+
+  const stamp = document.getElementById('planStamp');
+  stamp.textContent = 'נבנתה ב־' + new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
+  card.classList.add('capturing');
+
+  try{
+    const canvas = await html2canvas(card, {
+      backgroundColor:'#FAFBF8',
+      scale: Math.min(window.devicePixelRatio || 1, 2) * 1.6,
+      useCORS:true,
+      logging:false
+    });
+    const blob = await new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
+    if(!blob) throw new Error('no blob');
+
+    const file = new File([blob], 'תוכנית-ההרגל.png', {type:'image/png'});
+
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'תוכנית ההרגל שלי'});
+      btn.textContent = original;
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'תוכנית-ההרגל.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      btn.textContent = 'נשמר';
+      setTimeout(function(){ btn.textContent = original; }, 2000);
+    }
+  }catch(e){
+    if(e && e.name === 'AbortError'){ btn.textContent = original; }
+    else { btn.textContent = 'השמירה נכשלה'; setTimeout(function(){ btn.textContent = original; }, 2200); }
+  }finally{
+    card.classList.remove('capturing');
+    btn.disabled = false;
+  }
+}
+
+function restart(){
+  document.querySelectorAll('[data-k]').forEach(function(el){ el.value=''; });
+  Object.keys(data).forEach(function(k){ delete data[k]; });
+  show(1);
+}
+
+paint();
+</script>
+</body>
+</html>
