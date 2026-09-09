@@ -164,6 +164,15 @@ button.ghost{background:transparent;border:1px solid var(--pine);color:var(--pin
 button.ghost:hover{background:#E3E9DF}
 .note{color:var(--stone);font-size:15px;margin-top:20px;max-width:56ch}
 
+.shot{position:fixed;left:-10000px;top:0;width:540px;min-height:1170px;background:#1F4235;color:#F2F6EF;padding:140px 46px 56px;font-family:'Assistant',system-ui,sans-serif;display:flex;flex-direction:column}
+.shot .k1{font-size:13px;letter-spacing:.14em;color:#D9A445;font-weight:700;margin-bottom:20px}
+.shot .id{font-family:'Frank Ruhl Libre',serif;font-size:36px;font-weight:700;line-height:1.26;letter-spacing:-.02em;margin-bottom:14px}
+.shot .hb{font-size:20px;line-height:1.45;color:#9FC0B2;padding-bottom:26px;border-bottom:2px solid rgba(217,164,69,.5);margin-bottom:28px}
+.shot .row{margin-bottom:20px}
+.shot .rk{font-size:12px;font-weight:700;color:#D9A445;letter-spacing:.05em;margin-bottom:4px}
+.shot .rv{font-size:17px;line-height:1.5;color:#EAF0E7;white-space:pre-wrap}
+.shot .foot{margin-top:auto;padding-top:24px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:#8FA79A;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
 .imgout{display:none;margin-top:24px;background:var(--paper);border:1px solid var(--hair);border-radius:12px;padding:20px 22px}
 .imgout.on{display:block}
 .imgout h4{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:12px}
@@ -511,7 +520,6 @@ let imgUrl = null;
 
 async function saveImage(){
   const btn = document.getElementById('imgBtn');
-  const card = document.querySelector('.plan');
   const original = 'שמירה כתמונה';
   if(typeof html2canvas === 'undefined'){
     btn.textContent = 'נדרש חיבור לאינטרנט';
@@ -521,14 +529,14 @@ async function saveImage(){
   btn.textContent = 'מכין תמונה…';
   btn.disabled = true;
 
-  const stamp = document.getElementById('planStamp');
-  stamp.textContent = 'נבנתה ב־' + new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
-  card.classList.add('capturing');
+  const shot = buildShot();
+  document.body.appendChild(shot);
+  if(shot.scrollHeight > 1170) shot.style.paddingTop = '80px';
 
   try{
-    const canvas = await html2canvas(card, {
-      backgroundColor:'#FAFBF8',
-      scale: Math.min(window.devicePixelRatio || 1, 2) * 1.6,
+    const canvas = await html2canvas(shot, {
+      backgroundColor:'#1F4235',
+      scale:2,
       useCORS:true,
       logging:false
     });
@@ -551,9 +559,33 @@ async function saveImage(){
     btn.textContent = 'השמירה נכשלה';
     setTimeout(function(){ btn.textContent = original; }, 2200);
   }finally{
-    card.classList.remove('capturing');
+    shot.remove();
     btn.disabled = false;
   }
+}
+
+function buildShot(){
+  const el = document.createElement('div');
+  el.className = 'shot';
+
+  const rows = CELLS.filter(function(c){ return c[0] !== 'tinyWhen' && data[c[0]]; }).map(function(c){
+    return '<div class="row"><div class="rk">' + c[1].replace(/^\d+\.\s*/,'') + '</div>' +
+           '<div class="rv">' + esc(fmt(c[0], data[c[0]])) + '</div></div>';
+  }).join('');
+
+  const st = fmt('start', data.start), rv = fmt('review', data.review);
+  const foot = [
+    st ? '<span>מתחיל: ' + st + '</span>' : '',
+    rv ? '<span>בדיקה: ' + rv + '</span>' : ''
+  ].join('');
+
+  el.innerHTML =
+    '<div class="k1">תוכנית הפעולה שלי</div>' +
+    '<div class="id">' + (data.identity ? esc(data.identity) : '') + '</div>' +
+    '<div class="hb">' + (data.habit ? esc(data.habit) : '') + '</div>' +
+    rows +
+    (foot ? '<div class="foot">' + foot + '</div>' : '');
+  return el;
 }
 
 function showImage(url){
