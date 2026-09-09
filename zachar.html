@@ -550,7 +550,8 @@ async function saveImage(){
       backgroundColor:'#FAFBF8',
       scale: Math.min(window.devicePixelRatio || 1, 2) * 1.6,
       useCORS:true,
-      logging:false
+      logging:false,
+      allowTaint:true
     });
     const blob = await new Promise(function(res){ canvas.toBlob(res, 'image/png'); });
     if(!blob) throw new Error('no blob');
@@ -558,16 +559,15 @@ async function saveImage(){
     const file = new File([blob], 'תוכנית-ההרגל.png', {type:'image/png'});
 
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'תוכנית ההרגל שלי'});
-      btn.textContent = original;
+      try{
+        await navigator.share({files:[file], title:'תוכנית ההרגל שלי'});
+        btn.textContent = original;
+      }catch(e){
+        if(e.name !== 'AbortError') downloadImage(blob, original, btn);
+        else btn.textContent = original;
+      }
     } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'תוכנית-ההרגל.png';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-      btn.textContent = 'נשמר';
-      setTimeout(function(){ btn.textContent = original; }, 2000);
+      downloadImage(blob, original, btn);
     }
   }catch(e){
     if(e && e.name === 'AbortError'){ btn.textContent = original; }
@@ -575,6 +575,25 @@ async function saveImage(){
   }finally{
     card.classList.remove('capturing');
     btn.disabled = false;
+  }
+}
+
+function downloadImage(blob, original, btn){
+  try{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'תוכנית-ההרגל.png';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+    btn.textContent = 'נשמר ✓';
+    setTimeout(function(){ btn.textContent = original; }, 2000);
+  }catch(e){
+    btn.textContent = 'בדוק את ההרשאות';
+    setTimeout(function(){ btn.textContent = original; }, 2200);
   }
 }
 
